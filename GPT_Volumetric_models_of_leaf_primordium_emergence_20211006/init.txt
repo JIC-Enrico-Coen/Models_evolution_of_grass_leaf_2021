@@ -1,0 +1,53 @@
+    if (Steps(m)==0) && m.globalDynamicProps.doinit
+        % Put any code here that should only be performed at the start of
+        % the simulation.
+%%%% THESE ARE MODELS OF LEAF INITIATION FROM A DOME-SHAPED APEX
+%%%% CORRESPONDING TO MAIN TEXT FIGURES 2 & 4 AND SUPPLEMNTARY FIGURES S1 &
+%%%% S2 OF THE MANUSCRIPT "EVOLUTION OF THE GRASS LEAF BY PRIMOROIDUM
+%%%% EXTENSION AND PETIOLE-LAMINA REMODELING" (RICHARDSON, ET AL, SCIENCE 2021)
+        if m.globalProps.IFsetsoptions
+            m = setUpModelOptions( m, ...   % morphospace of ventral/dorsal and blade/stalk
+                'modelname', {'MODEL1',...  % "Ring Model", single othoplanar polairty field, with high specified Kper equal around ring  (Fig.2C to D)
+                              'MODEL2',...  % Abaxial/adaxial mutant (Fig.J to K)
+                              'MODEL3',... % Wildtype Eudicot leaf(Fig.4C to D)
+                              'MODEL4',... % Eudicot prs mutant (Fig.4E to F)
+                              'MODEL5',... % Eudicot prs wox 1 mutant (Fig.4G to H)
+                              'MODEL6',... % Wildtype grasss leaf (Fig.2I to L)
+                              'MODEL7',... % Maize narrowsheath mutant (Fig.2P to Q)
+                              'MODEL8',... % "Sloping primordium model". A single othoplanar polarity field with high specified growth rates perpendicular to the polarity in the primordium zone (PZ) and the apex. Within the PZ growth rates decline from the midpoint. (Fig2.E to F)
+                             }, 'MODEL3' ... % Model version name that is run.
+                ... % Add further lines for all the options that you want.
+            );
+        end
+
+        % Any further initialisation here.
+        subdivlength_i = getMgenLevels( m, 'SUBDIVLENGTH' );
+        didsplit = true;
+        MAXATTEMPTS = 5;
+        numattempts = 0;
+        while didsplit && (numattempts < MAXATTEMPTS)
+            [m,didsplit] = trysplit( m );
+            numattempts = numattempts+1;
+        end
+        
+        MAKESECONDLAYER = false;
+        if MAKESECONDLAYER
+            % setup latitudinal and longitudinal grid
+            m = leaf_makesecondlayer( m, 'mode', 'latlong', 'hemisphere', 'n',...  
+                                         'subdivisions', 40,...
+                                         'divisions', [16 8],...
+                                         'add', true );
+        end
+                                 
+        % setup the arrow color of second polarity                         
+        m = leaf_plotoptions( m, 'bioAalpha', 0,...                          
+                                 'highgradcolor2', [0, 0, 0.9],...  % Was 0.9, 0.1, 0.1       
+                                 'lowgradcolor2',[0, 0, 0.9],...  % Was 0.9, 0.1, 0.1   
+                                 'arrowthickness', 2 );
+        m = leaf_setmorphogenrole( m, 'EDGESPLIT', 'SUBDIVLENGTH' );
+        m = leaf_setmorphogenrole( m, 'SUBDIVISIONLENGTH', '' );
+    end
+    
+    OPTIONS = getModelOptions( m );
+    printModelOptions( m );
+    m = leaf_setproperty( m, 'surfacetension', 0.0625 );

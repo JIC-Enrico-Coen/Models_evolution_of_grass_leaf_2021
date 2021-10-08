@@ -1,0 +1,15 @@
+
+    % This code cannot go in the USER CODE: MORPHOGEN INTERACTIONS section,
+    % because it changes the structure of the mesh.
+    % It cannot go in the USER CODE: INITIALISATION section, because
+    % subdivlength_p is not available there.
+   ... if meshAtOrBeforeTime( m, 0 ) && any( subdivlength_p ~= 1)
+    ...    [m,numsplit,numunsplit] = leaf_remesh( m, 'longedges', true, 'repeat', 5 );
+   ... end
+    
+    
+   if doSubdivision 
+        [m,numsplit,numunsplit] = leaf_remesh( m, 'longedges', true, 'repeat', 5 );... was repeat 5
+        [m,numsplit,numunsplit] = leaf_remesh( m, 'longedges', true, 'repeat', 5 );... was repeat 5
+        [m,numsplit,numunsplit] = leaf_remesh( m, 'longedges', true, 'repeat', 5 );... was repeat 5
+    end

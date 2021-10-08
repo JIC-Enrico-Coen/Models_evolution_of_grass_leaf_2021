@@ -1,0 +1,306 @@
+
+% In this section you may modify the mesh in any way that does not
+% alter the set of nodes.
+
+    if (Steps(m)==0) && m.globalDynamicProps.doinit
+        
+%         [RADII_RING,RADII_CENTER,id_boundary1_p,id_boundary2_p,id_boundary_p,id_meristem_p,id_cz_p] ...
+        RADII_RING = sqrt(m.FEnodes(:,1).^2 + m.FEnodes(:,2).^2);
+        RADII_CENTER = sqrt(m.FEnodes(:,1).^2 + m.FEnodes(:,2).^2 + m.FEnodes(:,3).^2);
+        id_boundary1_p = double( (RADII_RING <= 0.5) &...
+                                 (RADII_RING >= 0.35) &...
+                                 (RADII_CENTER > 0.8) );
+        id_boundary2_p = double( (m.FEnodes(:,3) <= 0.4) &...
+                                 (m.FEnodes(:,3) >= 0.25) &...
+                                 (RADII_CENTER > 0.8) );
+        id_boundary_p = max( id_boundary1_p, id_boundary2_p );
+        id_meristem_p = double( (m.FEnodes(:,3)<0.3)|(RADII_RING < 0.4) );
+        id_cz_p = 1 - max( id_meristem_p, id_boundary_p ); % primordium zone (cz)
+        subdivlength_p(:) = 1 - 0.5*(id_cz_p==1);
+        % When subdivlength_p = 1, the normal subdivision edge length is used.
+        % In general, subdivlength_p multiplies the subdivision edge length.
+        % The smaller subdivlength_p, the more finely that part will be
+        % subdivided.
+
+% a central axial domain(CORE) orients shoot apical meristem growth
+        radial = sqrt(m.FEnodes(:,1).^2 + m.FEnodes(:,2).^2);
+        id_core_p = double( radial<=0.01 );
+
+ % a lateral axial domain (MODEL2)
+        id_axial_p = double( (abs(m.FEnodes(:,2)) < 0.05)&...
+                             (abs(m.FEnodes(:,1) + m.FEnodes(:,3)) < 0.058) );       
+               
+        side = [0, 0, 1];
+        v_radii_p = sqrt((m.FEnodes(:,1)-side(1)).^2+...
+                         (m.FEnodes(:,2)-side(2)).^2+...
+                         ((m.FEnodes(:,3)-side(3))*0.8).^2);
+
+        v_center_p = sqrt(m.FEnodes(:,1).^2 + m.FEnodes(:,2).^2 + m.FEnodes(:,3).^2);
+        
+        id_prox_p = double( m.FEnodes(:,3)==min(m.FEnodes(:,3)) );
+        id_dist_p = double( (id_midplane_p == 1) & (v_center_p>0.95) );
+        
+        % base of mesh was fixed at the X-Y plane
+        id_base_p = double( m.FEnodes(:,3) == min(m.FEnodes(:,3)) );
+        m = leaf_fix_vertex(m, 'vertex', find(id_base_p == 1), 'dfs', 'z');
+        
+        id_blade_p = double( m.FEnodes(:,3)>0.25 );
+        id_apex_p = double( (RADII_RING < 0.4)&(m.FEnodes(:,3)>0.3) );
+        
+        
+
+        
+   % surface domain is defined by cz and midplane domains
+        switch OPTIONS.modelname
+            
+            case 'MODEL2'   %  no midplane domain
+                id_surface_p((v_center_p > 0.95)&(~id_axial_p)&(id_cz_p)) = 1;   
+                
+            otherwise
+                id_surface_p((v_center_p > 0.95)&(~id_midplane_p)&(id_cz_p)) = 1;
+        end             
+ 
+        % MID  a factor generated at the midline
+        % EDGE a factor generated at the margin(rim) and diffuse towards a sink at the base 
+        % opp a diffusible factor produced at the opposite end to the midline
+        id_mid_p((~id_meristem_p)&(abs(m.FEnodes(:,2))<=0.05)&(m.FEnodes(:,1)<0)) = 1;
+        s_mid_p = id_mid_p;
+        m.morphogenclamp((id_mid_p == 1), s_mid_i) = 1;
+        m = leaf_mgen_conductivity( m, 'S_MID', 0.5 );
+        m = leaf_mgen_absorption( m, 'S_MID', 0.01 );
+        
+        id_pzmargin_p((~id_meristem_p)&(abs(m.FEnodes(:,2))<=0.05)&(m.FEnodes(:,1)>0)) = 1;
+        s_pzmargin_p = id_pzmargin_p;
+        m.morphogenclamp((id_pzmargin_p == 1), s_pzmargin_i) = 1;
+        m = leaf_mgen_conductivity( m, 's_pzmargin', 0.05 );
+        m = leaf_mgen_absorption( m, 's_pzmargin', 0.01 );
+        
+        id_edge_p((id_midplane_p)&(RADII_CENTER > 0.95)&(~id_mid_p)) = 1;
+        s_edge_p = id_edge_p-id_base_p;
+        m.morphogenclamp((id_edge_p == 1)|(id_base_p == 1), s_edge_i) = 1;
+        m = leaf_mgen_conductivity( m, 'S_EDGE', 0.2 );
+        m = leaf_mgen_absorption( m, 'S_EDGE', 0.01 );
+
+        % setup the tip point of midvein
+        MIDPOINT = [-0.7, 0, 0.7];
+        RADII_MIDPOINT = sqrt((m.FEnodes(:,1) - MIDPOINT(1)).^2 + ...
+                              (m.FEnodes(:,2) - MIDPOINT(2)).^2 + ...
+                              (m.FEnodes(:,3) - MIDPOINT(3)).^2);
+        id_midpoint_p(RADII_MIDPOINT < 0.12) = 1;  
+             
+    end
+    
+
+         doSubdivision = false;
+    if meshAtTime( m, 1 ) 
+         subdivlength_p(:) = 1 - 0.8*((id_surface_p==1).*(id_cz_p==1));
+         doSubdivision = true;
+    end
+    
+    if meshAtTime( m, 2 )  
+         switch OPTIONS.modelname   
+            
+            case 'MODEL2'
+                % abaxialised eudicot mutant model
+                id_abaxial_p(:) = 1;
+                id_adaxial_p(:) = 0;
+                
+                s_abaxial_p=id_abaxial_p;
+                 m.morphogenclamp((id_abaxial_p == 1), s_abaxial_i) = 1;
+                 m = leaf_mgen_conductivity(m, 'S_ABAXIAL', 0.05);
+                m = leaf_mgen_absorption(m, 'S_ABAXIAL', 0.01);
+
+            otherwise                
+        % setup the initial adaxial-abaxial system 
+        side = [0, 0, 1];
+        v_radii_p = sqrt((m.FEnodes(:,1)-side(1)).^2+...
+                    (m.FEnodes(:,2)-side(2)).^2+...
+                    ((m.FEnodes(:,3)-side(3))*0.8).^2);
+        id_adaxial_p(v_radii_p <= 0.65) = 1;
+        s_adaxial_p=id_adaxial_p;
+        m.morphogenclamp((id_adaxial_p == 1), s_adaxial_i) = 1;
+        m = leaf_mgen_conductivity(m, 'S_ADAXIAL', 0.05);
+        m = leaf_mgen_absorption(m, 'S_ADAXIAL', 0.01);
+
+        id_abaxial_p(v_radii_p >= 0.75) = 1;
+        s_abaxial_p=id_abaxial_p;
+        m.morphogenclamp((id_abaxial_p == 1), s_abaxial_i) = 1;
+        m = leaf_mgen_conductivity(m, 'S_ABAXIAL', 0.05);
+        m = leaf_mgen_absorption(m, 'S_ABAXIAL', 0.01);
+        
+         end
+         % midplane domain is activated where both the signals fall below a threshold value
+        id_midplane_p((s_adaxial_p<0.9)&(s_abaxial_p<0.9)&(~id_core_p)) = 1;
+        
+   
+
+        switch OPTIONS.modelname  
+            case {'MODEL1','MODEL6','MODEL8'}
+        % the cz domain divided into three parts - central, lateral, and marginal - 
+        % based on the value of a diffusible morphogen S_MID, using two thresholds 
+        id_central_p((s_mid_p>=0.7)&(id_cz_p))=1; 
+        id_marginal_p((s_mid_p<0.5)&(id_cz_p))=1; 
+        id_lateral_p((id_cz_p)&(~id_marginal_p)&(~id_central_p))=1;
+        id_pz_p = id_cz_p;  ... 
+        id_midplane_p=id_midplane_p.*id_pz_p; ...    
+
+         case {'MODEL3'}% Wildtype eudicot leaf
+         % the cz domain divided into three parts - central, lateral, and marginal - 
+        % based on the value of a diffusible morphogen S_MID, using two thresholds. lateral is further divided with olateral
+        id_central_p( (s_mid_p>=0.85) & (id_cz_p) ) = 1;
+        id_marginal_p( (s_mid_p<0.7) & (id_cz_p) & (s_mid_p>0.6) ) = 1;... 
+        id_stipule_p( (s_mid_p<0.65) & (id_cz_p) & (id_marginal_p) ) = 1; ...
+        id_stbound_p( (s_mid_p<0.67) & (id_cz_p) & (id_marginal_p)& (~id_stipule_p)) = 1;...
+        id_pz_p = id_cz_p .* (s_mid_p>0.6);  ... 
+        id_lateral_p( (id_pz_p) & (~id_marginal_p) & (~id_central_p) ) = 1;
+        id_olateral_p( (id_lateral_p) & (s_mid_p< 0.75)  ) = 1;
+        id_midplane_p = id_midplane_p .* id_pz_p; ...  
+        id_stpoint_p((s_mid_p<0.64)&(s_mid_p>0.61)&(id_midplane_p) &(id_surface_p))=1;...
+
+        case {'MODEL2'}%Abaxial mutant leaf 
+         % the CZ hasa single central domain   
+        id_central_p((s_mid_p>=0.85)&(id_cz_p))=1;
+        id_pz_p = id_central_p;  ... 
+ 
+        case 'MODEL4' % Eudicot prs mutant leaf 
+         % the cz domain divided into two parts - central, lateral   
+        % based on the value of a diffusible morphogen S_MID, using two
+        % thresholds lateral is further divided with olateral
+        id_central_p((s_mid_p>=0.85)&(id_cz_p))=1;
+        id_lateral_p((id_cz_p)&(s_mid_p>0.7)&(~id_central_p))=1;
+        id_olateral_p( (id_lateral_p) & (s_mid_p< 0.75)  ) = 1;
+        id_pz_p((id_cz_p)&(s_mid_p>0.7))=1;  ... 
+        id_midplane_p=id_midplane_p.*id_pz_p; ...  
+        
+       case 'MODEL5' %Eudicot prs wox1 mutant leaf
+         % the cz domain divided into two parts - central, lateral - 
+        % based on the value of a diffusible morphogen S_MID, using two thresholds 
+        id_central_p((s_mid_p>=0.85)&(id_cz_p))=1;
+        id_lateral_p((id_cz_p)&(s_mid_p>0.75)&(~id_central_p))=1;
+        id_pz_p((id_cz_p)&(s_mid_p>0.75))=1;  ... 
+        id_midplane_p=id_midplane_p.*id_pz_p; ...  
+        
+        case {'MODEL7'} %Narrowsheath mutant leaf
+        % the cz domain divided into two parts - central, lateral- 
+        % based on the value of a diffusible morphogen S_MID, using two thresholds 
+        id_central_p((s_mid_p>=0.7)&(id_cz_p))=1;
+        id_lateral_p((id_cz_p)&(s_mid_p>0.5)&(~id_central_p))=1;
+        id_pz_p((id_cz_p)&(s_mid_p>0.46))=1;  ... 
+        id_midplane_p=id_midplane_p.*id_pz_p; ...   
+
+        end 
+               
+        switch OPTIONS.modelname
+            
+            case 'MODEL2' % In the abaxial mutant replace the midplane domain with a lateral axial domain
+                pol_p = id_surface_p - id_core_p - id_axial_p;
+                m.morphogenclamp((id_surface_p == 1)|(id_core_p == 1)|...
+                                 (id_axial_p == 1), pol_i) = 1;
+              
+                m = leaf_mgen_conductivity( m, 'POL', 0.1 );
+                m = leaf_mgen_absorption( m, 'POL', 0.01 );
+                
+            otherwise
+                pol_p = id_surface_p - id_midplane_p - id_core_p;
+                m.morphogenclamp((id_surface_p == 1)|(id_core_p == 1)|...
+                                 (id_midplane_p == 1), pol_i) = 1;
+               
+                m = leaf_mgen_conductivity( m, 'POL', 0.1 );
+                m = leaf_mgen_absorption( m, 'POL', 0.01 );
+        end
+         
+        id_boundpz_p =(1-id_pz_p);        
+        s_boundpz_p = id_boundpz_p;
+        m.morphogenclamp((id_boundpz_p == 1), s_boundpz_i) = 1;
+        m = leaf_mgen_conductivity(m, 'S_BOUNDPZ', 0.01);
+        m = leaf_mgen_absorption(m, 'S_BOUNDPZ', 0.1); %
+        
+        s_stbound_p = id_stbound_p;
+        m.morphogenclamp((id_stbound_p == 1), s_stbound_i) = 1;
+        m = leaf_mgen_conductivity(m, 'S_STBOUND', 0.01);
+        m = leaf_mgen_absorption(m, 'S_STBOUND', 0.1); %
+        
+        s_midplane_p = (id_midplane_p +id_axial_p).*(v_center_p > 0.95);
+        m.morphogenclamp((id_midplane_p == 1)| (id_axial_p == 1), s_midplane_i) = 1;
+        m = leaf_mgen_conductivity(m, 'S_MIDPLANE', 0.01);
+        m = leaf_mgen_absorption(m, 'S_MIDPLANE', 0.001); %
+        
+        id_rim_p= id_midplane_p.*id_surface_p;
+        
+        s_rim_p = id_rim_p;
+        m.morphogenclamp((id_rim_p == 1), s_rim_i) = 1;
+        m = leaf_mgen_conductivity(m, 'S_RIM', 0.05);
+        m = leaf_mgen_absorption(m, 'S_RIM', 0.05); %
+        
+        s_tip_p = id_midpoint_p;
+        m.morphogenclamp((id_midpoint_p == 1), s_tip_i) = 1;
+        m = leaf_mgen_conductivity(m, 'S_TIP', 0.05);
+        m = leaf_mgen_absorption(m, 'S_TIP', 0.05); %
+
+        
+         switch OPTIONS.modelname
+            
+            case {'MODEL1', 'MODEL8'}   % no proximodistal polarity field
+                pol2_p = 0;
+                
+             otherwise
+                 %establish the proximodistal polarity field
+                pol2_p = 0.5 * (id_boundpz_p + id_stbound_p) - id_midpoint_p -id_core_p.*(v_center_p > 0.95)-id_stpoint_p;...
+                m.morphogenclamp((id_midpoint_p == 1)|(id_boundpz_p == 1)|(id_stbound_p == 1)|(id_stpoint_p == 1)|((id_core_p.*(v_center_p > 0.95))==1), pol2_i) = 1;...STIPULE
+                m = leaf_mgen_conductivity( m, 'POL2', 0.1 );
+                m = leaf_mgen_absorption( m, 'POL2', 0.01 ); 
+         end              
+    end 
+    
+    if meshAfterTime( m, 2 ) && meshBeforeTime( m, 20 ) 
+ 
+        m = leaf_mgen_conductivity(m, 'S_MIDPLANE', 0);
+        
+        m = leaf_mgen_conductivity( m, 'S_MID', 0.0 );
+        m = leaf_mgen_absorption( m, 'S_MID', 0.0 );
+
+         % if (realtime > 4) 
+         if meshAfterTime( m, 4 )
+        m = leaf_mgen_conductivity(m, 'S_BOUNDPZ', 0);   
+        m = leaf_mgen_conductivity( m, 'S_STBOUND', 0.0 );
+        m = leaf_mgen_absorption( m, 'S_STBOUND', 0.0 );
+        m = leaf_mgen_conductivity(m, 'S_RIM', 0.0);
+        m = leaf_mgen_absorption(m, 'S_RIM', 0.0); %
+         end       
+         
+        % @@ KRN Growth Rate Regulatory Network
+        % kpar: growth rate parallel to the orthoplanar polarity field (Kop)
+        % kpar2: growth rate parallel to the proximodistal polarity field (Kpd)
+        % kper: growth rate perpendicular to both polarity fields (Kper)
+        
+        switch OPTIONS.modelname  
+            case {'MODEL1'}  % high growth perpendicular to the orthoplanar polarity field in the pz domain Fig.2C to D
+                kpar_p = 0.08 * id_apex_p;      
+                kpar2_p = 0.08*id_apex_p + 0.4* id_pz_l;...
+                kper_p = kpar2_p;
+              
+              case {'MODEL2', 'MODEL3','MODEL4','MODEL5'} 
+                kpar_p = 0.08*id_apex_p;      
+                kpar2_p = 0.08*id_apex_p + 0.4*(id_central_p + 0.8*id_lateral_p + 0.3 * id_marginal_p)...
+                           .* id_pz_p.* inh(5,s_pzmargin_l).*pro(0.3, id_abaxial_l).*(0.1 + (s_rim_l<0.7));...     
+                kper_p =   0.04*id_apex_p...
+                           +  0.1*id_pz_p.*(id_central_l+id_lateral_l)...
+                           .*pro(2, (s_mid_l<0.95).*pro(0.3, id_abaxial_l).*inh(0.5, s_tip_l).*(s_rim_l>0.5).* inh(5,s_pzmargin_l)).*inh(1, (s_mid_l>0.95));... 
+                    
+              case {'MODEL6', 'MODEL7'} 
+                kpar_p = 0.08*id_apex_p;      
+                kpar2_p = 0.08*id_apex_p + 0.4*(id_central_p + 0.8*id_lateral_p + 0.3 * id_marginal_p)...
+                           .* id_pz_p.* inh(5,s_pzmargin_l).*pro(0.3, id_abaxial_l).*(0.1 + (s_rim_l<0.7));...     
+                kper_p =   0.04*id_apex_p...
+                           +  0.1*id_pz_p.*(id_central_l+id_lateral_l)...
+                           .*pro(2, (s_mid_l<0.95).*pro(0.3, id_abaxial_l).*inh(0.5, s_tip_l).*(s_rim_l>0.5).* inh(5,s_pzmargin_l)).*inh(1, (s_mid_l>0.95));... 
+                
+               case {'MODEL8'}
+                kpar_p = 0.08*id_apex_p;      
+                kpar2_p = 0.08*id_apex_p...
+                        + 0.4*(id_central_p + 0.8*id_lateral_p + 0.3*id_marginal_p).* id_pz_l.* inh(5,s_pzmargin_l);...
+                kper_p = kpar2_p;
+                
+        end
+        
+    end

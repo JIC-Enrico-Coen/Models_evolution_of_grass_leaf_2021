@@ -1,0 +1,153 @@
+
+% make POL arrows white outside pz domain
+
+function [m,result] = GFtbox_Preplot_Callback( m, theaxes ) %#ok<DEFNU>
+    result = [];
+    % Your code here.
+    [id_notpz_i,id_notpz_p] = getMgenLevels( m, 'ID_NOTPZ' );  %#ok<ASGLU>
+    m.polsetfrozen = perVertextoperFE( m, id_notpz_p ) > 0.5;
+
+end
+  
+    
+function [m,result] = GFtbox_Postplot_Callback( m, theaxes ) %#ok<DEFNU>
+    result = [];
+    % Your code here.
+    m.polsetfrozen(:) = false;
+end
+
+
+% Here you may write any functions of your own, that you want to call from
+% the interaction function, but never need to call from outside it.
+% Remember that they do not have access to any variables except those
+% that you pass as parameters, and cannot change anything except by
+% returning new values as results.
+% Whichever section they are called from, they must respect the same
+% restrictions on what modifications they are allowed to make to the mesh.
+
+% The GFtbox_..._Callback routines can be deleted if you do not use them.
+% Those that you retain will be automatically called by GFtbox at certain
+% points in the simulation cycle.
+% If you retain them, their headers specifying their arguments and results
+% must not be altered.
+% Standard name for a function to be called to decide whether to split a cell.
+% function [m,splits,splitcentre,splitdirection] = GFtbox_Precellsplit_Callback( m, ci )
+% % ci is a list of indexes of N cells to be considered for splitting.
+% % splits will be a list of N booleans, specifying which of the given cells
+% % should be split.
+% % splitcentre is an N*3 array.  For cells which are to be split, the
+% % corresponding row is a point through which the splitting line should
+% % pass.  For other cells it should be zero.
+% % splitdirection is an N*3 array.  For cells which are to be split, the
+% % corresponding row is the normal to the splitting plane.  For other cells
+% % it is zero.
+% % If a cell should be split but you do not want to specify a splitting
+% % plane, set the corresponding rows of splitcentre and splitdirection to
+% % zero.
+%     
+% 
+%     % Get the morphogen for determining splitting threshold.
+%     [s_celldivthresh_i,s_celldivthresh_p,s_celldivthresh_a,s_celldivthresh_l] = getMgenLevels( m, 'S_CELLDIVTHRESH' );  %#ok<ASGLU>
+%     % Convert it to a perl-cell value.
+%     perCellThreshold = perVertexToPerCell( m, s_celldivthresh_p );
+%     % Split if the cell area exceeds the morphogen.
+%     splits = (m.secondlayer.cellarea(ci) > perCellThreshold(ci)) & (perCellThreshold > 0) ;%& (realtime <50);
+%     % Let GFtbox decide the splitting plane.
+%     splitcentre = NaN( length(ci), 3 );
+%     splitdirection = zeros( length(ci), 3 );
+% end
+% function [m,result] = GFtbox_Precelldivision_Callback( m, ci ) %#ok<DEFNU>
+%     result = [];
+%     % Get the morphogen for determining splitting threshold.
+%     [s_celldivthresh_i,s_celldivthresh_p,s_celldivthresh_a,s_celldivthresh_l] = getMgenLevels( m, 'S_CELLDIVTHRESH' );  %#ok<ASGLU>
+%     if isempty(s_celldivthresh_i)
+%         % No such factor.
+%         return;
+%     end
+%     % Convert it to a perl-cell value.
+%     perCellThreshold = perVertexToPerCell( m, s_celldivthresh_p );
+%     % Split if the cell area exceeds the morphogen.
+%     result.divide = (m.secondlayer.cellarea(ci) > perCellThreshold(ci)) & (perCellThreshold > 0) ;%& (realtime <50);
+%     % Let GFtbox decide the splitting plane.
+%     result.dividepoint = NaN( length(ci), 3 );
+%     result.perpendicular = zeros( length(ci), 3 );
+% end
+% 
+% function [m,result] = GFtbox_Postcelldivision_Callback( m, ci, cei, newci, newcei, oe1, oe2, ne1, ne2, ne3 ) %#ok<DEFNU>
+%     result = [];
+%     % Your code here.
+% end
+% 
+% function [m,result] = GFtbox_Postiterate_Callback( m ) %#ok<DEFNU>
+%     result = [];
+      % In this project we mark clones at an arbitrarily chosen moment.
+    % This could be done in the main interaction function, but then we
+    % would never get to see the clones exactly as they are established,
+    % but only after a growth step and possible splitting of some of the
+    % cells.  Putting the code here in the Postiterate callback avoids
+    % this.  Note that Steps(m) and the current time have been
+    % incremented since the main interaction function was called.
+    
+
+%     if meshAtTime( m, OPTIONS.clonetime, 0.005 )
+%         [c_cloneid_i,c_cloneid] = getCellFactorLevels( m, 'c_cloneid' );
+%         
+% 
+%         switch OPTIONS.clonetype
+%             case 'random'
+%                 % Mark every cell with a random colour.
+%  
+% 
+%                 numcells = getNumberOfCells(m);
+%                 % Set C_CLONEID to a different integer value for each cell.
+%                 c_cloneid = 0:(numcells-1);
+%                 % Here are several examples of getting sets of random colours.
+%                 % The second and third arguments are colours in HSV (hue,
+%                 % saturation, value) coordinates, specifying the allowed range.
+%                  randomColors = randcolor( numcells, [0.25 1 1], [0.75 1 1] ); % greenish to blueish, fully bright and saturated
+%         %         randomColors = randcolor( numcells, [0 0 0], [0 0 1] ); % greyscale
+%          %       randomColors = randcolor( numcells, [0 0 0], [1 1 1] ); % all colours are possible
+%                  m = leaf_setcellcolorinfo( m, 'factor',c_cloneid_i, 'colors', randomColors );
+%                 
+
+%                 % Set C_CLONEID to a different integer value for each cell.
+%                 c_cloneid = 0:(numcells-1);
+        
+
+        
+
+%             case 'biggest'
+%                 % Mark a chosen set of cells with one colour and the rest
+%                 % another colour.  Here we mark the biggest two cells red
+%                 % and the rest green.
+%  
+% 
+%                 m = leaf_setcellcolorinfo( m, 'factor',c_cloneid_i, 'colors', [0 1 0; 1 0 0] );
+%                 
+% 
+%                 % Set C_CLONEID to zero where you want green and 1 where you want red.
+%                 [~,perm] = sort( m.secondlayer.cellarea, 'descend' );
+%                 c_cloneid(:) = 0;
+%                 c_cloneid( perm([1 2]) ) = 1;
+%         end
+%         
+% 
+%         m.secondlayer.cellvalues(:,c_cloneid_i) = c_cloneid(:);
+%     end
+%     % Your code here.
+% end
+% 
+% function [m,result] = GFtbox_Preplot_Callback( m, theaxes ) % %#ok<DEFNU> 
+%     result = [];
+%     [c_area_i, c_area] = getCellFactorLevels (m, 'c_area');
+%     if c_area_i > 0
+%         m.secondlayer.cellvalues(:,c_area_i)= m.secondlayer.cellarea;
+%     end
+% end
+% 
+% function [m,result] = GFtbox_Postplot_Callback( m, theaxes ) %#ok<DEFNU>
+%     result = [];
+%     % Your code here.
+% end
+
+

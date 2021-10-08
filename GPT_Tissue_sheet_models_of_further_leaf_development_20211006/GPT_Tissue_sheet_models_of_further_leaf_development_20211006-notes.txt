@@ -1,0 +1,57 @@
+May 14 models all good.  Next challenge is to see whether the dicot changes can be minimised by incorporating into the main model.
+May15 models see if reduce inhibition by s_petmargin but didn't work so reverted.  Grows ok up to 1.55, then base has problem.  
+Maybe try using a thick base next time instead - would need to ask Richard.
+May16 try seeing if we can release constraint on overlap but make base thicker. Note that base currently can't grow in thickness because of anchoring.  
+Maybe fix only the minimum nodes - ask Richard
+Equalising growth in base kper with petiole looked good but too much growth at rim of tube.  Try inhibiting kpar with id lateral.  This opens the leaf.
+save as new project 16aMay and introduce final stage again.
+Works quite well but still difficult to open at the end.  Save as new project 16b, remove inhibtion within petiole.  Open slightly with kper during late.
+fix nodes only on B side and savc as 17 May.
+Save version from 17 May as 18 May, introduce subdivision of petmargin for benefit of ns mutant.
+managed to open leaf later by inhibiting margin kpar.  now try switching later.
+18aMay looked good but need to fix region of petiole with inhibited growth and reduce promotion of kper
+20May overgrowth of base, so edit it by extending overlap to more than a few nodes and reducing growth rates during late.
+20May very good though too much repression of petiole margin.
+21bMay very good until about 1.5. Maybe try increasing kpar generally using 2*grobase or 1.5*grobase and then reduce timestep to make it look better?
+Also what happens if you increase duration of middle phase to 2.5?
+21bMay very good. Now extending middle phase past 1.2 and inhibiting base with nsheath.
+22May very good - try improving base and promote petiole
+22aMay remove b side restriction from bottom and promote petiole more.  Looks very good but sheath still pokes out.  Try anchoring base not bottom
+24 May very good, though blade grows through petiole at bottom.  Save as 24aMay and create s_nsheath to promote base growth and reinstate weak inhibition of smargin middle phase.
+24bMay same as 24 May but with s_nsheath and wider sector.
+24bMay introduced pgrad control of kpar. Very good by 1.35 then overbends.
+25May try introducing pgrad control of kper. No good.  Instead managed to open after extension for first time!  Petiole growth too much so revisit.
+25bMay try alternating growth repression to open blade at end.  Looks good at 1.42 Still can't get decent opened blade but at least the blade separates.
+26bMayNew version with adjustments for ns mutant. NOte still can't open at 1.35.  Go back and incorporate NS mutant changes - 26cMay
+27May Went back to 24bMay out of desperation!  Need to correct the kpar in the nsheath mutant but otherwise try this again.
+First step - try increasing Kpar growth rate during late phase. No longer works.  So try introducing late phase at time 1.3
+27 May looks ok at 1.35.  Problem is nsheath mutant.  
+So go back to basics with 27Maynsheath to sort this out: 
+introduce S-minus to inhib growth, 
+reintroduce petmargin to promote base, 
+clamp smid at petmargin, 
+remover kper from intial phase
+Note that final version ran well but too much infolding so next will reduce kpar differential on margin - do this for 27aMayGrassleaf.
+27aMayGrassleaf looks good.  Note that now petiole boundary is above the rim of the initial disc.
+10thJuneDicot looks good but boundary not smooth.  Next try subdividing margin in 10aJune.
+Same as 30 May but change early growth so no longer involves petmargin inhibition and increase kper to create more overlap.
+28 May try inhibiting par growth in middle phase in margin. 
+27bMay remove inhib by of Kpar by id_petmargin and increase inhibition of kper at top and bottom. 
+29b main change was to inhibit kper by sminus during early, to prevent curving over,.  Now need to reduce inhib of kper by smid in mid phase.
+29d narrowsheath mutant same as 29b run to time 1.5.  Looks very good but when I run wt on my laptop it doesn't look good.  So rerun on my PC as 30May.   
+30aMay has all problems fixed and looks very good - 2mm long at time 1.5.  Now try narrowsheath mutant.
+30aMay narrowsheath looks good too!  
+30bMay try introducing a period of extension and shifting the other periods later - seemed ok for nsheathmutant
+30cMay try 30bMay but for wt.  Looks fantastic!
+30dMay same as 30cMay but increase period of extension.
+31May same as 30cMay but reduce repression by petmargin in nsheathmutant.  No good - causes it to crumple.  So go back to original version and make a movie.
+31aMay try to improve nsheath.  Increase Gthresh to 0.4, increase duration of extension phase (with increased inhibition of margin).
+1bJune same as 31aMay but now try dicot.  For dicot need to reduce inhibition of kpar and promotion of kper at margins
+1bJune dicot looks good upto time 0.8.  Save as 1cJune to check wt grass still runs ok. Managed to sort out tip!
+2June Grassleaf same as 1cJune but try to remove bulge at the tip.
+4aJuneNarrowsheath same as 2 June but narrowsheath to check ok.
+8th June based on 5th June Good.
+Based on 10th June dicot which is very good.
+Based on 11th June dicot which is very good and wider leaf.  Try to improve segmentation.
+12th June wox changed three things: 1. promotion of kpar in margin at early stage, 2, reduce kpar inhib by id petmargin in early phase
+3. inhibition by dicot in setting petiole domain.  Looks good. Now check dicot still works.

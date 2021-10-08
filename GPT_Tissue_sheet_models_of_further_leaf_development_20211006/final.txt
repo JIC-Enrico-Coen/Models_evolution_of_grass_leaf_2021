@@ -1,0 +1,176 @@
+% to set pol arrows white outside pz
+  m = calcPolGrad(m);
+    m.polsetfrozen = perVertextoperFE( m, id_notpz_p ) > 0.5;
+% one shot subdivision
+
+switch OPTIONS.modelname
+
+case {'Grassleaf', 'nsheathmutant', 'bop'}
+% 
+   if meshAtTime( m, Gstart )... 
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+
+        m = leaf_subdivide( m, 'morphogen','id_subdiv2',...
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');
+             
+  
+   end
+%    
+    if meshAtOrAfterTime( m, Gstart)&& meshAtOrBeforeTime( m, EarlyStop) %subdivide during early phase
+
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+
+        m = leaf_subdivide( m,'minabslength',0.018, 'morphogen','id_subdiv1',... was 0.02
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');
+            
+            
+    end
+     
+    
+    if meshAtTime( m, EarlyStop )
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+        
+       m = leaf_subdivide( m, 'morphogen','id_subdiv2',... was 0.02
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');  
+            
+    end
+
+   
+      if meshAtOrAfterTime( m, EarlyStop)&& meshAtOrBeforeTime( m, MiddleStop) %subdivide in middle phase
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+
+        m = leaf_subdivide( m, 'minabslength',0.05,'morphogen','id_middle',... was 0.03
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');
+      end
+      
+      
+      if meshAtOrAfterTime( m, MiddleStop)&& meshAtOrBeforeTime( m, LateStop) %subdivide in middle phase
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+
+        m = leaf_subdivide( m, 'minabslength',0.35,'morphogen','id_late',...
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');
+      end
+
+    if meshAtOrAfterTime( m, MiddleStop-dt)&& meshAtOrBeforeTime( m, MiddleStop) %subdivide during early phase
+
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+
+        m = leaf_subdivide( m,'minabslength',0.018, 'morphogen','id_subdiv5',... was 0.02
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');
+            
+            
+    end
+     
+         
+      if meshAtOrAfterTime( m, LateStop)
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+
+        m = leaf_subdivide( m, 'minabslength',0.5,'morphogen','id_final',...% was 0.1 inabslength 0.35
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');
+    end
+   
+
+
+case {'dicot', 'prs','woxprs', 'marginal'}... DICOT leaf
+         
+    if meshAtOrAfterTime( m, Gstart)&& meshAtOrBeforeTime( m, EarlyStop) %subdivide in EARLY phase
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+
+       m = leaf_subdivide( m, 'minabslength',0.02,'morphogen','id_early',... % 
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');
+    end
+     
+    if meshAtTime( m, EarlyStop-1*dt )
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+
+        m = leaf_subdivide( m, 'morphogen','id_subdiv6',... was 0.02
+                'min',0.8,'max',1.1,... 
+                'mode','mid','levels','interp');
+    end
+    
+    if meshAtTime( m, EarlyStop)
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+
+        m = leaf_subdivide( m, 'morphogen','id_stipule',... was 0.02
+                'min',0.8,'max',1.1,... 
+                'mode','mid','levels','interp');
+    end
+   
+     if meshAtOrAfterTime( m, EarlyStop)&& meshAtOrBeforeTime( m, MiddleStop) %subdivide in MIDDLE phase
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+
+       m = leaf_subdivide( m, 'minabslength',0.06,'morphogen','id_middle',... % Was 0.07 RICO minsabslength defines smallest size to go to over period of time. 
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');
+            
+       m = leaf_subdivide( m, 'minabslength',0.015,'morphogen','id_stipule',... % RICO minsabslength defines smallest size to go to over period of time. 
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');
+     end
+     
+ 
+
+ 
+        if meshAtOrAfterTime( m, MiddleStop)&& meshAtOrBeforeTime( m, LateStop) ...LATE subdivision
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+
+        m = leaf_subdivide( m, 'minabslength',0.1,'morphogen','id_late',...% 
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');
+            
+       m = leaf_subdivide( m, 'minabslength',0.03,'morphogen','id_stipule',... % minsabslength defines smallest size to go to over period of time. 
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');
+        end
+    
+
+   
+case { 'Kaplan', 'Kwoxprs'}
+              
+%      
+     if meshAtTime( m,LeafZone+0.01) %subdivide in middle phase % was LeafZone+0.01
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+
+        m = leaf_subdivide( m,'morphogen','id_ulsub',... %minsabslength defines smallest size to go to over period of time. (s_prox_l <= 0.25).*(s_mid_l>=0.6)
+                'min',0.8,'max',1.1,... 
+                'mode','mid','levels','interp');
+     end
+     
+        if meshAtOrAfterTime( m, LeafZone+0.05)&& meshAtOrBeforeTime( m, EarlyStop) 
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+        m = leaf_subdivide( m, 'minabslength',0.025,'morphogen','id_early',...%
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');
+        end
+    
+    if meshAtOrAfterTime( m, EarlyStop)&& meshAtOrBeforeTime( m, MiddleStop) %MIDDLE subdivide in middle phase
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+
+       m = leaf_subdivide( m, 'minabslength',0.07,'morphogen','id_middle',... %  minsabslength defines smallest size to go to over period of time. 
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');
+            
+      m = leaf_subdivide( m, 'minabslength',0.015,'morphogen','id_stipule',... % minsabslength defines smallest size to go to over period of time. 
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');
+     end
+
+        if meshAtOrAfterTime( m, MiddleStop)&& meshAtOrBeforeTime( m, LateStop) 
+        m = leaf_setproperty( m, 'surfacetension', 0 );
+
+        m = leaf_subdivide( m, 'minabslength',0.1,'morphogen','id_late',...% 
+                'min',0.8,'max',1.1,...
+                'mode','mid','levels','interp');
+        end
+end
+
+
+% In this section you may modify the mesh in any way whatsoever.

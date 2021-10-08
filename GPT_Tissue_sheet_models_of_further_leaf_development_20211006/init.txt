@@ -1,0 +1,38 @@
+    if (Steps(m)==0) && m.globalDynamicProps.doinit
+        % Put any code here that should only be performed at the start of
+        % the simulation.
+
+        % Reset several fields of m to their default states.
+        % Give the command "help resetMeshValues" for details.
+        % You can delete this if you do not want this to happen.
+        m = resetMeshValues( m );
+       % m = leaf_plotoptions( m, 'highgradcolor', [1 0.5 0], 'lowgradcolor', [0 1 1] ); % orange and cyan
+        m = leaf_plotoptions( m, 'highgradcolor', [0 0 0.9], 'lowgradcolor', [1 1 1] ); % orange and cyan
+        m = leaf_mgen_plotpriority( m, ...                                    
+                   {'id_dul','id_pul'}, [1 2]); % set id_DUL and id_PUL as priprioty over all other morphogens in multiplot mode.
+
+        if m.globalProps.IFsetsoptions
+            m = setUpModelOptions( m, ...
+                'modelname', { 'Grassleaf', 'nsheathmutant','prs','dicot','bop', 'Kaplan', 'marginal','woxprs','Kwoxprs' },'Grassleaf' ,  ...
+                'clonetime', {}, 0.02, ...
+                'clonetype', { 'random', 'biggest' }, 'random', ...
+                'makecells', {}, false ...
+            );
+        end
+
+        % Any further initialisation here.
+
+    end
+    OPTIONS = getModelOptions( m );
+    printModelOptions( m );
+    
+%Cell Div
+%  m = leaf_setproperty(m,'bioApresplitproc',@GFtbox_Precellsplit_Callback);
+%  m = leaf_plotoptions(m, 'userpreplotproc', @GFtbox_Preplot_Callback);
+%  m.secondlayer.averagetargetarea = 0;
+ %make a grid
+%    if OPTIONS.makecells && ~hasNonemptySecondLayer( m )
+  %  m = leaf_makesecondlayer (m, 'mode', 'latlong', 'divisions', [75 18], 'plane', 'xy');%'subdivisions' , [1 1],
+%    end
+   % m = leaf_plotoptions (m, 'bioAemptyalpha', 0)
+  m.secondlayer.averagetargetarea = 0;
