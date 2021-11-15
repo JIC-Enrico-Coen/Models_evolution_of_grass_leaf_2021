@@ -3,8 +3,7 @@ petiole-lamina remodeling", by Richardson et al., to appear in Science, 2021.
 
 The models are:
 
-GPT\_Tissue\_sheet\_models\_of\_further\_leaf\_development\_20211006
- 
+GPT\_Tissue\_sheet\_models\_of\_further\_leaf\_development\_20211006   
 GPT\_Volumetric\_models\_of\_leaf\_primordium\_emergence\_20211006
 
-The models can be run using the Matlab package GFtbox, which is available from https://sourceforge.net/projects/gftbox/. It requires a current installation of Matlab, which is commercial software available from Mathworks.com.
+The models can be run using the Matlab package GFtbox, which is available from [GitHub](https://github.com/JIC-Enrico-Coen/GrowthToolbox). GFtbox requires an installation of Matlab, which is commercial software available from [Mathworks](https://Mathworks.com).
