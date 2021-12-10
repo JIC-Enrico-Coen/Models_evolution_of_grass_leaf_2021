@@ -1,5 +1,5 @@
 This is a set of computational models associated with the paper "Evolution of the grass leaf by primordium extension and
-petiole-lamina remodeling", by Richardson et al., to appear in Science, 2021.
+petiole-lamina remodeling", by Richardson et al., published in Science, December 2021. [doi:10.1126/science.abf9407](https://www.science.org/doi/10.1126/science.abf9407)
 
 The models are:
 
